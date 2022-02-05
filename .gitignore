@@ -1,0 +1,7 @@
+data*/
+pose*/
+*checkpoints/
+.*/
+*logs/
+*cache*/
+*.csv
