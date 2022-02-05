@@ -5,9 +5,9 @@ import tensorflow as tf
 from train import pix2pix
 
 if __name__ == "__main__":
-    PATH = './poses'
+    PATH = './pose'
     path_to_zip = pathlib.Path(PATH)
-    PATH = path_to_zip / 'stick_figure_sitting'
+    PATH = path_to_zip / 'sitting'
 
     cp_path = ''
     cpdir = './temp_checkpoints'

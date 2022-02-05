@@ -18,8 +18,8 @@ from typing import List
 import unittest
 
 import cv2
-from data import BodyPart
-from data import KeyPoint
+from ..data import BodyPart
+from ..data import KeyPoint
 from .movenet_multipose import MoveNetMultiPose
 import numpy as np
 import pandas as pd
