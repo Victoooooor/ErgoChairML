@@ -17,7 +17,6 @@ setup(
     install_requires=[
         'numpy',
         'imgaug',
-        'urllib',
         'tensorflow',
         'matplotlib',
         'pandas',
