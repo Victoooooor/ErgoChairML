@@ -8,7 +8,7 @@ import datetime
 
 class pix2pix:
 
-  def __init__(self, cpdir, Buf_S=400, Bat_S=1, IW=256, IH=256, Lambda=100, ldr="logs/"):
+  def __init__(self, cpdir, Buf_S=400, Bat_S=32, IW=256, IH=256, Lambda=100, ldr="logs/"):
     #Define HyperParams
     self.BUFFER_SIZE = Buf_S
     self.BATCH_SIZE = Bat_S

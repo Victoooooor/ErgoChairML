@@ -9,12 +9,18 @@ if __name__ == '__main__':
   path_to_zip = pathlib.Path(PATH)
   PATH = path_to_zip / 'sitting_in_chair'
   cpdir = './temp_checkpoints'
-  p2p = pix2pix(cpdir)
+
+
   train_dataset = tf.data.Dataset.list_files(str(PATH / 'train*.*'))
+
+  p2p = pix2pix(cpdir,Buf_S=train_dataset.cardinality())
   train_dataset = train_dataset.map(p2p.load_image_train,
                                     num_parallel_calls=tf.data.AUTOTUNE)
-  train_dataset = train_dataset.shuffle(p2p.BUFFER_SIZE)
+  train_dataset = train_dataset.cache()
+  train_dataset = train_dataset.shuffle(p2p.BUFFER_SIZE,
+                                        reshuffle_each_iteration=True)
   train_dataset = train_dataset.batch(p2p.BATCH_SIZE)
+  train_dataset = train_dataset.prefetch(tf.data.experimental.AUTOTUNE)
 
   try:
     test_dataset = tf.data.Dataset.list_files(str(PATH / 'test*.*'))

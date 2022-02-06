@@ -9,8 +9,8 @@ from gen_chair.gen_pose import Preprocess
 
 if __name__ == '__main__':
   #define meta parameters:
-  imgdr = './datass'
-  posedr = './posess'
+  imgdr = './data'
+  posedr = './pose'
 
   # compare the number of items in data and pose
   # assume dataset is fully paired if the numbers match,
