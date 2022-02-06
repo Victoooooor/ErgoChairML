@@ -26,7 +26,8 @@ setup(
         'progressbar',
         'IPython',
         'opencv-python',
-        'keras'
+        'keras',
+        'python-magic'
 
     ],  # add any additional packages that
     # needs to be installed along with your package. Eg: 'caer'
