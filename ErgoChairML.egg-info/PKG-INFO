@@ -1,0 +1,17 @@
+Metadata-Version: 2.1
+Name: ErgoChairML
+Version: 0.0.1
+Summary: ErgoChairML
+Author: Victor Zhang
+Author-email: <victorzh716@email.com>
+License: UNKNOWN
+Keywords: python,tensorflow,pix2pix,MoveNet,Mask R-CNN,Image Segmentation,GAN
+Platform: UNKNOWN
+Classifier: Development Status :: 3 - Alpha
+Classifier: Intended Audience :: Education
+Classifier: Programming Language :: Python :: 3
+Classifier: Operating System :: Linux :: ArchLinux
+Classifier: Operating System :: Microsoft :: Windows
+
+Scrap Image from Google, Preprocess and generate dataset, train pix2pix
+
