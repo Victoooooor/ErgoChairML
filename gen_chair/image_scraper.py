@@ -72,7 +72,7 @@ class image_scraper:
         return(links)
 
 
-    def download(self, keywords, limit, extensions={'.jpg', '.png', '.ico', '.gif', '.jpeg'}, main_directory = "datas/"):
+    def download(self, keywords, limit, extensions={'.jpg', '.png', '.ico', '.gif', '.jpeg'}, main_directory = "data/"):
         keyword_to_search = [str(item).strip() for item in keywords.split(',')]
 
         i = 0

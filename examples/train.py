@@ -5,14 +5,12 @@ import tensorflow as tf
 from gen_chair.pix2pix import pix2pix
 
 if __name__ == '__main__':
-  PATH = './pose'
-  path_to_zip = pathlib.Path(PATH)
-  PATH = path_to_zip / 'sitting_in_chair'
-  cpdir = './temp_checkpoints'
-
-
-  train_dataset = tf.data.Dataset.list_files(str(PATH / 'train*.*'))
-
+  # PATH = './pose'
+  PATH = './poses'
+  PATH = pathlib.Path(PATH)
+  cpdir = './skeleton_checkpoints'
+  # cpdir = './masked_checkpoints'
+  train_dataset = tf.data.Dataset.list_files(str(PATH /'*'/ 'train*.*'))
   p2p = pix2pix(cpdir,Buf_S=train_dataset.cardinality())
   train_dataset = train_dataset.map(p2p.load_image_train,
                                     num_parallel_calls=tf.data.AUTOTUNE)
@@ -23,13 +21,13 @@ if __name__ == '__main__':
   train_dataset = train_dataset.prefetch(tf.data.experimental.AUTOTUNE)
 
   try:
-    test_dataset = tf.data.Dataset.list_files(str(PATH / 'test*.*'))
+    test_dataset = tf.data.Dataset.list_files(str(PATH /'*'/ 'test*.*'))
   except tf.errors.InvalidArgumentError:
-    test_dataset = tf.data.Dataset.list_files(str(PATH / 'val*.*'))
+    test_dataset = tf.data.Dataset.list_files(str(PATH /'*'/ 'val*.*'))
   test_dataset = test_dataset.map(p2p.load_image_test)
   test_dataset = test_dataset.batch(p2p.BATCH_SIZE)
-  p2p.train(train_dataset,test_dataset)
-  
+  p2p.train(train_dataset,test_dataset,10000)
+  #
   # inp, re = p2p.load(str(PATH.parent/'sitting' / 'train_sitting_3.jpeg'))
   # # Casting to int for matplotlib to display the images
   # plt.figure()

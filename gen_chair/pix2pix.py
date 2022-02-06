@@ -301,7 +301,7 @@ class pix2pix:
         self.manager.save()
     self.manager.save()
 
-  def train(self, train_dataset, test_dataset):
+  def train(self, train_dataset, test_dataset, steps=10000):
 
     self.checkpoint = tf.train.Checkpoint(generator_optimizer=self.generator_optimizer,
                                      discriminator_optimizer=self.discriminator_optimizer,
@@ -311,7 +311,7 @@ class pix2pix:
                                               max_to_keep=3, checkpoint_name=self.checkpoint_prefix)
     # print(list(PATH.iterdir()))
 
-    self.fit(train_dataset, test_dataset, steps=40000)
+    self.fit(train_dataset, test_dataset, steps=steps)
     #for demo, gen 5 examples
     for inp, tar in test_dataset.take(5):
       self.generate_images(self.generator, inp, tar)

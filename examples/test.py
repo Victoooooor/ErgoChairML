@@ -1,16 +1,19 @@
+import os
 import pathlib
 
 import tensorflow as tf
 
-from train import pix2pix
+from gen_chair import pix2pix
 
 if __name__ == "__main__":
+    print(os.getcwd())
     PATH = './pose'
     path_to_zip = pathlib.Path(PATH)
-    PATH = path_to_zip / 'sitting'
-
+    PATH = path_to_zip / 'sitting_in_chair'
+    test_dataset = tf.data.Dataset.list_files(str(PATH / 'test*.*'))
+    print(test_dataset.cardinality())
     cp_path = ''
-    cpdir = './temp_checkpoints'
+    cpdir = './checkpoints'
     p2p = pix2pix(cpdir)
     p2p.loadcp()
 
