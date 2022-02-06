@@ -2,9 +2,15 @@ import os
 import shutil
 import sys
 
+from gen_chair import coco
 from gen_chair.gen_multi import Preprocess
 
 
+class InferenceConfig(coco.CocoConfig):
+  # Set batch size to 1 since we'll be running inference on
+  # one image at a time. Batch size = GPU_COUNT * IMAGES_PER_GPU
+  GPU_COUNT = 1
+  IMAGES_PER_GPU = 1
 
 
 if __name__ == '__main__':
@@ -23,7 +29,7 @@ if __name__ == '__main__':
     except FileNotFoundError:
       pass
     try:
-      prep = Preprocess(imgdr,posedr,'./', 0.7)
+      prep = Preprocess(imgdr,posedr,'./', 0.7, InferenceConfig)
     except FileNotFoundError:
       print(f"Image Data Not Found: {imgdr}", file=sys.stderr)
       print('Data Preprocessing skipped')

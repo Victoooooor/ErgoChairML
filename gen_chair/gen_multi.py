@@ -20,7 +20,7 @@ from . import utils
 import tensorflow as tf
 import tensorflow_hub as hub
 from .data import BodyPart, person_from_keypoints_with_scores
-
+from . import segmentation
 
 class Preprocess(object):
   """Helper class to preprocess pose sample images for classification."""
@@ -29,7 +29,8 @@ class Preprocess(object):
                images_folder,
                pose_folder,
                csvs_out_path,
-               split):
+               split,
+               config):
     """Preprocessing: generate corresponding poseture image for valid image
     """
     self._images_folder = images_folder
@@ -49,6 +50,9 @@ class Preprocess(object):
       raise FileNotFoundError
     model = hub.load("https://tfhub.dev/google/movenet/multipose/lightning/1")
     self.movenet = model.signatures['serving_default']
+    self.chair = 57
+    self.person = 1
+    self.seg = segmentation(config)
 
   def get_concat_h(self,im1, im2):
     dst = Image.new('RGB', (im1.width + im2.width, im1.height))
@@ -105,7 +109,7 @@ class Preprocess(object):
                                     quoting=csv.QUOTE_MINIMAL)
         # Get list of images
         image_names = sorted(
-            [n for n in os.listdir(images_folder) if not n.startswith('.')])
+          [n for n in os.listdir(images_folder) if not n.startswith('.')])
         if per_class_limit is not None:
           image_names = image_names[:per_class_limit]
 
@@ -136,12 +140,11 @@ class Preprocess(object):
             os.remove(image_path)
             continue
           output = self.movenet(image)
-          people = output['output_0'].numpy()[:,:,:51].reshape((6,17,3))
+          people = output['output_0'].numpy()[:, :, :51].reshape((6, 17, 3))
           # Save landmarks if all landmarks were detected
-          max_min = 0
           ppl = []
           for i in range(6):
-            if output['output_0'][0,i,-1] > detection_threshold:
+            if output['output_0'][0, i, -1] > detection_threshold:
               ppl.append(person_from_keypoints_with_scores(people[i], image_height, image_width))
 
           should_keep_image = len(ppl) > 0
@@ -152,17 +155,109 @@ class Preprocess(object):
             continue
 
           valid_image_count += 1
-          
 
+          pcimg = image[0].numpy().copy()
+          personimg = image[0].numpy()
+          self.seg.classmask(pcimg, [self.person, self.chair])
+          self.seg.classmask(personimg, [self.person])
+          PIL_pc = Image.fromarray(pcimg.astype('uint8'), 'RGB')
 
           # Draw the prediction result on top of the image for debugging later
-          output_overlay = self.draw_prediction_on_image(np.full_like(image[0].numpy(),0), ppl,
-              close_figure=True, keep_input_size=False)
+          output_overlay = self.draw_prediction_on_image(personimg, ppl,
+                                                         close_figure=True, keep_input_size=False)
 
           # Write detection result into an image file
-          PIL_image = Image.fromarray(image[0].numpy().astype('uint8'), 'RGB')
-          resized_image = PIL_image.resize((256, 256))
+          # PIL_image = Image.fromarray(image[0].numpy().astype('uint8'), 'RGB')
+          resized_image = PIL_pc.resize((256, 256))
           concated = self.get_concat_h(resized_image, output_overlay)
+          # print(type(concated))
+          # output_frame = cv2.cvtColor(concated, cv2.COLOR_RGB2BGR)
+          # cv2.imwrite(os.path.join(pose_folder, image_name), output_frame)
+          if np.random.uniform() < self.split:
+            concated.save(os.path.join(pose_folder, 'train_' + image_name))
+          else:
+            concated.save(os.path.join(pose_folder, 'test_' + image_name))
+          # Get landmarks and scale it to the same size as the input image
+
+        if not valid_image_count:
+          raise RuntimeError(
+            'No valid images found for the "{}" class.'
+              .format(pose_class_name))
+
+    # Print the error message collected during preprocessing.
+    print('\n'.join(self._messages))
+
+    # Combine all per-class CSVs into a single output file
+  def img_seg(self, config):
+    # for pose_class_name in self._pose_class_names:
+    #   print('Preprocessing:', pose_class_name, file=sys.stderr)
+    #
+    #   # Paths for the pose class.
+    #
+    #   pose_folder = os.path.join(self._pose_folder, pose_class_name)
+    #
+    #   image_names = sorted(
+    #     [n for n in os.listdir(pose_folder) if not n.startswith('.')])
+    #
+    #   # Detect pose landmarks from each image
+    #   for image_name in tqdm.tqdm(image_names):
+    #     image_path = os.path.join(pose_folder, image_name)
+
+        # input_image, real_image = self.load(image_path)
+    for pose_class_name in self._pose_class_names:
+      print('Preprocessing:', pose_class_name, file=sys.stderr)
+
+      # Paths for the pose class.
+      images_folder = os.path.join(self._images_folder, pose_class_name)
+      pose_folder = os.path.join(self._pose_folder, pose_class_name)
+      csv_out_path = os.path.join(self._csvs_out_folder_per_class,
+                                  pose_class_name + '.csv')
+
+      if not os.path.exists(pose_folder):
+        os.makedirs(pose_folder)
+
+      # Detect landmarks in each image and write it to a CSV file
+      with open(csv_out_path, 'w') as csv_out_file:
+        csv_out_writer = csv.writer(csv_out_file,
+                                    delimiter=',',
+                                    quoting=csv.QUOTE_MINIMAL)
+        # Get list of images
+        image_names = sorted(
+            [n for n in os.listdir(images_folder) if not n.startswith('.')])
+
+        valid_image_count = 0
+
+        seg = segmentation(config)
+
+        # Detect pose landmarks from each image
+        for image_name in tqdm.tqdm(image_names):
+          image_path = os.path.join(images_folder, image_name)
+
+          try:
+            image = tf.io.read_file(image_path)
+            image = tf.io.decode_jpeg(image)
+            image = tf.expand_dims(image, axis=0)
+            image = tf.cast(tf.image.resize_with_pad(image, 256, 256), dtype=tf.int32)
+            _, image_height, image_width, channel = image.shape
+          except:
+            self._messages.append('Skipped and removed' + image_path + '. Invalid image.')
+            os.remove(image_path)
+            continue
+
+          # Skip images that isn't RGB because Movenet requires RGB images
+          if channel != 3:
+            self._messages.append('Skipped and removed' + image_path +
+                                  '. Image isn\'t in RGB format.')
+            os.remove(image_path)
+            continue
+
+          pcimg = image[0].numpy().copy()
+          personimg = image[0].numpy()
+          seg.classmask(pcimg, [self.person, self.chair])
+          seg.classmask(personimg, [self.person])
+          PIL_person = Image.fromarray(personimg.astype('uint8'), 'RGB')
+          PIL_pc = Image.fromarray(pcimg.astype('uint8'), 'RGB')
+          concated = self.get_concat_h(PIL_pc, PIL_person)
           # print(type(concated))
           # output_frame = cv2.cvtColor(concated, cv2.COLOR_RGB2BGR)
           # cv2.imwrite(os.path.join(pose_folder, image_name), output_frame)
@@ -181,8 +276,11 @@ class Preprocess(object):
     # Print the error message collected during preprocessing.
     print('\n'.join(self._messages))
 
-    # Combine all per-class CSVs into a single output file
 
+    personimg = image[0].numpy().copy()
+    pcimg = personimg.copy()
+    self.seg.classmask(personimg, [self.person])
+    self.seg.classmask(pcimg, [self.person, self.chair])
 
   def class_names(self):
     """List of classes found in the training dataset."""

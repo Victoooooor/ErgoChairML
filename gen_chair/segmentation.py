@@ -29,7 +29,7 @@ class_names = ['BG', 'person', 'bicycle', 'car', 'motorcycle', 'airplane',
 
 
 class segmentation:
-    def __init__(self,InferenceConfig):
+    def __init__(self,InferenceConfig, dim = 0):
         self.ROOT_DIR = os.getcwd()
         self.MODEL_DIR = os.path.join(self.ROOT_DIR, "logs")
         self.COCO_MODEL_PATH = os.path.join(self.ROOT_DIR, "mask_rcnn_coco.h5")
@@ -39,33 +39,34 @@ class segmentation:
         self.config.display()
         self.model = modellib.MaskRCNN(mode="inference", model_dir=self.MODEL_DIR, config=self.config)
         self.model.load_weights(self.COCO_MODEL_PATH, by_name=True)
-
+        self.dim = dim
     def get_mask(self,classes, masks, ids):
+        counter = 0
+        class_num = len(classes)
         true_mask = np.full_like(masks[:, :, 0], 0)
         for i, c in enumerate(ids):
             if c in classes:
                 true_mask += masks[:, :, i]
+                counter += 1
         true_mask = true_mask > 0
-        return true_mask
+        if counter == class_num:
+            return true_mask
+        else:
+            return np.full_like(masks[:, :, 0], 1)
 
     def classmask(self, image, classes):
-        results = self.model.detect([image], verbose=1)
+        results = self.model.detect([image], verbose=0)
 
         # Visualize results
         r = results[0]
-
-        visualize.display_instances(image, r['rois'], r['masks'], r['class_ids'],
-                                    class_names, r['scores'])
-        print(type(image))
+        if len(r['class_ids']) == 0:
+            return
         mask = self.get_mask(classes, r['masks'], r['class_ids'])
         for c in range(3):
             image[:, :, c] = np.where(mask == 1,
                                       image[:, :, c],
-                                      0)
+                                      image[:, :, c] * self.dim)
 
-        img = Image.fromarray(image, 'RGB')
-        img.save('my.png')
-        img.show()
 
 
 # Create model object in inference mode.

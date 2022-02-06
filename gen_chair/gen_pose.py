@@ -140,14 +140,11 @@ class Preprocess(object):
           try:
             image = tf.io.read_file(image_path)
             image = tf.io.decode_jpeg(image)
+            image_height, image_width, channel = image.shape
           except:
             self._messages.append('Skipped and removed' + image_path + '. Invalid image.')
             os.remove(image_path)
             continue
-          else:
-            image = tf.io.read_file(image_path)
-            image = tf.io.decode_jpeg(image)
-            image_height, image_width, channel = image.shape
 
           # Skip images that isn't RGB because Movenet requires RGB images
           if channel != 3:
