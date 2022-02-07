@@ -5,10 +5,10 @@ import tensorflow as tf
 from gen_chair.pix2pix import pix2pix
 
 if __name__ == '__main__':
-  # PATH = './pose'
-  PATH = './poses'
+  PATH = '../poses'
+  # PATH = './poses'
   PATH = pathlib.Path(PATH)
-  cpdir = './skeleton_checkpoints'
+  cpdir = '../skeleton_checkpoints'
   # cpdir = './masked_checkpoints'
   train_dataset = tf.data.Dataset.list_files(str(PATH /'*'/ 'train*.*'))
   p2p = pix2pix(cpdir,Buf_S=train_dataset.cardinality())
