@@ -1,3 +1,4 @@
+import copy
 import csv
 import numpy as np
 import pandas as pd
@@ -31,28 +32,17 @@ class Preprocess(object):
   """Helper class to preprocess pose sample images for classification."""
 
   def __init__(self,
-               images_folder,
-               pose_folder,
-               csvs_out_path,
                split):
     """Preprocessing: generate corresponding poseture image for valid image
     """
-    self._images_folder = images_folder
-    self._pose_folder = pose_folder
-    self._csvs_out_path = csvs_out_path
     self._messages = []
     self.split = split
     # Create a temp dir to store the pose CSVs per class
     self._csvs_out_folder_per_class = tempfile.mkdtemp()
 
     # Get list of pose classes and print image statistics
-    self._pose_class_names = sorted(
-        [n for n in os.listdir(self._images_folder) if not n.startswith('.')
-         if os.path.isdir(os.path.join(self._images_folder,n))]
-        )
-    if len(self._pose_class_names) == 0:
-      raise FileNotFoundError
     self.movenet = Movenet('movenet_thunder')
+    self.detection_threshold = 0.1
 
   def get_concat_h(self,im1, im2):
     dst = Image.new('RGB', (im1.width + im2.width, im1.height))
@@ -103,10 +93,23 @@ class Preprocess(object):
     return image_np
 
   def process(self,
+              images_folder,
+              pose_folder,
+              csvs_out_path = './',
               per_class_limit=None,
               detection_threshold=0.1):
     """Preprocesses images in the given folder.
     """
+    self._images_folder = images_folder
+    self._pose_folder = pose_folder
+    self._pose_class_names = sorted(
+      [n for n in os.listdir(images_folder) if not n.startswith('.')
+       if os.path.isdir(os.path.join(self._images_folder, n))]
+    )
+    if len(self._pose_class_names) == 0:
+      raise FileNotFoundError
+    if detection_threshold is not None:
+      self.detection_threshold= detection_threshold
     # Loop through the classes and preprocess its images
     for pose_class_name in self._pose_class_names:
       print('Preprocessing:', pose_class_name, file=sys.stderr)
@@ -157,7 +160,7 @@ class Preprocess(object):
           # Save landmarks if all landmarks were detected
           min_landmark_score = min(
               [keypoint.score for keypoint in person.keypoints])
-          should_keep_image = min_landmark_score >= detection_threshold
+          should_keep_image = min_landmark_score >= self.detection_threshold
           if not should_keep_image:
             self._messages.append('Skipped and removed' + image_path +
                                   '. No pose was confidentlly detected.')
@@ -202,9 +205,42 @@ class Preprocess(object):
     # Combine all per-class CSVs into a single output file
 
     all_landmarks_df = self._all_landmarks_as_dataframe()
-    all_landmarks_df.to_csv(os.path.join(self._csvs_out_path,
+    all_landmarks_df.to_csv(os.path.join(csvs_out_path,
                'landmarks_df' + '.csv'), index=False)
 
+  def img_seg(self, image_path):
+    try:
+      image = tf.io.read_file(image_path)
+      image = tf.io.decode_jpeg(image)
+      image = tf.expand_dims(image, axis=0)
+      image_origin = copy.copy(image)
+      image = tf.cast(tf.image.resize_with_pad(image, 256, 256), dtype=tf.int32)
+      _, image_height, image_width, channel = image_origin.shape
+    except:
+      self._messages.append('Skipped' + image_path + '. Invalid image.')
+      return None
+
+    # Skip images that isn't RGB because Movenet requires RGB images
+    if channel != 3:
+      self._messages.append('Skipped' + image_path +
+                            '. Image isn\'t in RGB format.')
+      return None
+
+    person = self.detect(image)
+
+    # Save landmarks if all landmarks were detected
+    min_landmark_score = min(
+      [keypoint.score for keypoint in person.keypoints])
+    should_keep_image = min_landmark_score >= self.detection_threshold
+    if not should_keep_image:
+      self._messages.append('Skipped and removed' + image_path +
+                            '. No pose was confidentlly detected.')
+
+      return None
+    output_overlay = self.draw_prediction_on_image(np.full_like(image.numpy(), 0), person,
+                                                   close_figure=True, keep_input_size=False)
+
+    return output_overlay
 
   def class_names(self):
     """List of classes found in the training dataset."""
