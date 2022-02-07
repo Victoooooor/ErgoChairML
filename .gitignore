@@ -6,3 +6,4 @@ pose*/
 *cache*/
 *.csv
 *.h5
+out*/
