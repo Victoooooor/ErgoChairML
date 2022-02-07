@@ -193,55 +193,54 @@ class Preprocess(object):
 
     # Combine all per-class CSVs into a single output file
   def img_seg(self, image_path):
-        # input_image, real_image = self.load(image_path)
-    for pose_class_name in self._pose_class_names:
-      try:
-        image = tf.io.read_file(image_path)
-        image = tf.io.decode_jpeg(image)
-        image = tf.expand_dims(image, axis=0)
-        image_origin = copy.copy(image)
-        image = tf.cast(tf.image.resize_with_pad(image, 256, 256), dtype=tf.int32)
-        _, image_height, image_width, channel = image_origin.shape
-      except:
-        self._messages.append('Skipped' + image_path + '. Invalid image.')
-        return None
+    try:
+      image = tf.io.read_file(image_path)
+      image = tf.io.decode_jpeg(image)
+      image = tf.expand_dims(image, axis=0)
+      image_origin = copy.copy(image)
+      image = tf.cast(tf.image.resize_with_pad(image, 256, 256), dtype=tf.int32)
+      _, image_height, image_width, channel = image_origin.shape
+    except:
+      self._messages.append('Skipped' + image_path + '. Invalid image.')
+      return None
 
-      # Skip images that isn't RGB because Movenet requires RGB images
-      if channel != 3:
-        self._messages.append('Skipped' + image_path +
-                              '. Image isn\'t in RGB format.')
-        return None
+    # Skip images that isn't RGB because Movenet requires RGB images
+    if channel != 3:
+      self._messages.append('Skipped' + image_path +
+                            '. Image isn\'t in RGB format.')
+      return None
 
-      output = self.movenet(image)
-      people = output['output_0'].numpy()[:, :, :51].reshape((6, 17, 3))
+    output = self.movenet(image)
+    people = output['output_0'].numpy()[:, :, :51].reshape((6, 17, 3))
 
-      if image_width > image_height:
-        # print('scaling')
-        dif = people - 0.5
-        people[:, :, 0] = 0.5 + image_width / image_height * dif[:, :, 0]
-      elif image_width < image_height:
-        # print('scaling')
-        dif = people - 0.5
-        people[:, :, 1] = 0.5 + image_height / image_width * dif[:, :, 1]
+    if image_width > image_height:
+      # print('scaling')
+      dif = people - 0.5
+      people[:, :, 0] = 0.5 + image_width / image_height * dif[:, :, 0]
+    elif image_width < image_height:
+      # print('scaling')
+      dif = people - 0.5
+      people[:, :, 1] = 0.5 + image_height / image_width * dif[:, :, 1]
 
-      # Save landmarks if all landmarks were detected
-      ppl = []
-      for i in range(6):
-        if output['output_0'][0, i, -1] > self.detection_threshold:
-          ppl.append(person_from_keypoints_with_scores(people[i], image_height, image_width))
+    # Save landmarks if all landmarks were detected
+    ppl = []
+    for i in range(6):
+      if output['output_0'][0, i, -1] > self.detection_threshold:
+        ppl.append(person_from_keypoints_with_scores(people[i], image_height, image_width))
 
-      should_keep_image = len(ppl) > 0
-      if not should_keep_image:
-        self._messages.append('Skipped' + image_path +
-                              '. No pose was confidentlly detected.')
-        return None
+    should_keep_image = len(ppl) > 0
+    if not should_keep_image:
+      self._messages.append('Skipped' + image_path +
+                            '. No pose was confidentlly detected.')
+      return None
 
-      personimg = image_origin[0].numpy()
-      self.seg.classmask(personimg, [self.person])
-      output_overlay = self.draw_prediction_on_image(personimg, ppl,
-                                                     close_figure=True, keep_input_size=True)
+    personimg = image_origin[0].numpy()
+    self.seg.classmask(personimg, [self.person])
+    output_overlay = self.draw_prediction_on_image(personimg, ppl,
+                                                   close_figure=True, keep_input_size=True)
 
-      return output_overlay
+    return output_overlay
+
 
   def class_names(self):
     """List of classes found in the training dataset."""
