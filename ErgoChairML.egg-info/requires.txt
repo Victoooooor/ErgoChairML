@@ -1,6 +1,5 @@
 numpy
 imgaug
-urllib
 tensorflow
 matplotlib
 pandas
@@ -9,4 +8,6 @@ Pillow
 python-magic
 progressbar
 IPython
-cv2keras
+opencv-python
+keras
+python-magic
