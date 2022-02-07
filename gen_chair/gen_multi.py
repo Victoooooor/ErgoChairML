@@ -192,22 +192,17 @@ class Preprocess(object):
     print('\n'.join(self._messages))
 
     # Combine all per-class CSVs into a single output file
-  def img_seg(self, image_path):
+  def img_seg(self, image):
     try:
-      image = tf.io.read_file(image_path)
-      image = tf.io.decode_jpeg(image)
       image = tf.expand_dims(image, axis=0)
       image_origin = copy.copy(image)
       image = tf.cast(tf.image.resize_with_pad(image, 256, 256), dtype=tf.int32)
       _, image_height, image_width, channel = image_origin.shape
     except:
-      self._messages.append('Skipped' + image_path + '. Invalid image.')
       return None
 
     # Skip images that isn't RGB because Movenet requires RGB images
     if channel != 3:
-      self._messages.append('Skipped' + image_path +
-                            '. Image isn\'t in RGB format.')
       return None
 
     output = self.movenet(image)
@@ -230,8 +225,6 @@ class Preprocess(object):
 
     should_keep_image = len(ppl) > 0
     if not should_keep_image:
-      self._messages.append('Skipped' + image_path +
-                            '. No pose was confidentlly detected.')
       return None
 
     personimg = image_origin[0].numpy()

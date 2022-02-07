@@ -206,20 +206,15 @@ class Preprocess(object):
     all_landmarks_df.to_csv(os.path.join(csvs_out_path,
                'landmarks_df' + '.csv'), index=False)
 
-  def img_seg(self, image_path):
+  def img_seg(self, image):
 
     try:
-      image = tf.io.read_file(image_path)
-      image = tf.io.decode_jpeg(image)
       image_height, image_width, channel = image.shape
     except:
-      self._messages.append('Skipped and removed' + image_path + '. Invalid image.')
       return None
 
     # Skip images that isn't RGB because Movenet requires RGB images
     if channel != 3:
-      self._messages.append('Skipped and removed' + image_path +
-                            '. Image isn\'t in RGB format.')
       return None
     person = self.detect(image)
 
@@ -228,8 +223,6 @@ class Preprocess(object):
       [keypoint.score for keypoint in person.keypoints])
     should_keep_image = min_landmark_score >= self.detection_threshold
     if not should_keep_image:
-      self._messages.append('Skipped and removed' + image_path +
-                            '. No pose was confidentlly detected.')
       return None
 
 

@@ -3,7 +3,7 @@ import shutil
 import sys
 
 from gen_chair.gen_pose import Preprocess
-
+import tensorflow as tf
 
 
 
@@ -28,4 +28,7 @@ if __name__ == '__main__':
       print(f"Image Data Not Found: {imgdr}", file=sys.stderr)
       print('Data Preprocessing skipped')
     # prep.process(imgdr,posedr,'./',None,0.1)
-    out = prep.img_seg('./data/person_sit/person sit_3.jpeg')
+    image = tf.io.read_file('./data/person_sit/person sit_3.jpeg')
+    image = tf.io.decode_jpeg(image)
+    out = prep.img_seg(image)
+    print(type(out))
