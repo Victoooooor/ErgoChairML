@@ -31,12 +31,10 @@ from .data import BodyPart
 class Preprocess(object):
   """Helper class to preprocess pose sample images for classification."""
 
-  def __init__(self,
-               split):
+  def __init__(self):
     """Preprocessing: generate corresponding poseture image for valid image
     """
     self._messages = []
-    self.split = split
     # Create a temp dir to store the pose CSVs per class
     self._csvs_out_folder_per_class = tempfile.mkdtemp()
 
@@ -97,9 +95,11 @@ class Preprocess(object):
               pose_folder,
               csvs_out_path = './',
               per_class_limit=None,
-              detection_threshold=0.1):
+              detection_threshold=0.1,
+              split = 0.7):
     """Preprocesses images in the given folder.
     """
+    self.split = split
     self._images_folder = images_folder
     self._pose_folder = pose_folder
     self._pose_class_names = sorted(
