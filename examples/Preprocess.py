@@ -23,8 +23,9 @@ if __name__ == '__main__':
     except FileNotFoundError:
       pass
     try:
-      prep = Preprocess(0.7)
+      prep = Preprocess()
     except FileNotFoundError:
       print(f"Image Data Not Found: {imgdr}", file=sys.stderr)
       print('Data Preprocessing skipped')
-    prep.process(imgdr,posedr,'./',None,0.1)
+    # prep.process(imgdr,posedr,'./',None,0.1)
+    out = prep.img_seg('./data/person_sit/person sit_3.jpeg')

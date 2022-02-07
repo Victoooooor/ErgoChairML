@@ -207,23 +207,20 @@ class Preprocess(object):
                'landmarks_df' + '.csv'), index=False)
 
   def img_seg(self, image_path):
+
     try:
       image = tf.io.read_file(image_path)
       image = tf.io.decode_jpeg(image)
-      image = tf.expand_dims(image, axis=0)
-      image_origin = copy.copy(image)
-      image = tf.cast(tf.image.resize_with_pad(image, 256, 256), dtype=tf.int32)
-      _, image_height, image_width, channel = image_origin.shape
+      image_height, image_width, channel = image.shape
     except:
-      self._messages.append('Skipped' + image_path + '. Invalid image.')
+      self._messages.append('Skipped and removed' + image_path + '. Invalid image.')
       return None
 
     # Skip images that isn't RGB because Movenet requires RGB images
     if channel != 3:
-      self._messages.append('Skipped' + image_path +
+      self._messages.append('Skipped and removed' + image_path +
                             '. Image isn\'t in RGB format.')
       return None
-
     person = self.detect(image)
 
     # Save landmarks if all landmarks were detected
@@ -233,8 +230,10 @@ class Preprocess(object):
     if not should_keep_image:
       self._messages.append('Skipped and removed' + image_path +
                             '. No pose was confidentlly detected.')
-
       return None
+
+
+    # Draw the prediction result on top of the image for debugging later
     output_overlay = self.draw_prediction_on_image(np.full_like(image.numpy(), 0), person,
                                                    close_figure=True, keep_input_size=False)
 
