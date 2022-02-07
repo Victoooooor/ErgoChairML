@@ -51,8 +51,6 @@ class Preprocess(object):
   def detect(self, input_tensor, inference_count=3):
     """Runs detection on an input image.
     """
-    image_height, image_width, channel = input_tensor.shape
-    # Detect pose using the full input image
     try:
       self.movenet.detect(input_tensor.numpy(), reset_crop_region=True)
 
