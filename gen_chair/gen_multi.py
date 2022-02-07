@@ -27,28 +27,16 @@ class Preprocess(object):
   """Helper class to preprocess pose sample images for classification."""
 
   def __init__(self,
-               images_folder,
-               pose_folder,
-               csvs_out_path,
-               split,
                config):
     """Preprocessing: generate corresponding poseture image for valid image
     """
-    self._images_folder = images_folder
-    self._pose_folder = pose_folder
-    self._csvs_out_path = csvs_out_path
     self._messages = []
-    self.split = split
     # Create a temp dir to store the pose CSVs per class
     self._csvs_out_folder_per_class = tempfile.mkdtemp()
 
     # Get list of pose classes and print image statistics
-    self._pose_class_names = sorted(
-        [n for n in os.listdir(self._images_folder) if not n.startswith('.')
-         if os.path.isdir(os.path.join(self._images_folder,n))]
-        )
-    if len(self._pose_class_names) == 0:
-      raise FileNotFoundError
+
+
     model = hub.load("https://tfhub.dev/google/movenet/multipose/lightning/1")
     self.movenet = model.signatures['serving_default']
     self.chair = 57
@@ -88,10 +76,21 @@ class Preprocess(object):
     return PIL_image
 
   def process(self,
+              images_folder,
+              pose_folder,
               per_class_limit=None,
-              detection_threshold=0.1):
+              detection_threshold=0.1,
+              split = 0.7):
     """Preprocesses images in the given folder.
     """
+    self._images_folder = images_folder
+    self._pose_folder = pose_folder
+    self._pose_class_names = sorted(
+      [n for n in os.listdir(images_folder) if not n.startswith('.')
+       if os.path.isdir(os.path.join(self._images_folder, n))]
+    )
+    if len(self._pose_class_names) == 0:
+      raise FileNotFoundError
     if detection_threshold is not None:
       self.detection_threshold= detection_threshold
     # Loop through the classes and preprocess its images
@@ -178,7 +177,7 @@ class Preprocess(object):
           # print(type(concated))
           # output_frame = cv2.cvtColor(concated, cv2.COLOR_RGB2BGR)
           # cv2.imwrite(os.path.join(pose_folder, image_name), output_frame)
-          if np.random.uniform() < self.split:
+          if np.random.uniform() < split:
             concated.save(os.path.join(pose_folder, 'train_' + image_name))
           else:
             concated.save(os.path.join(pose_folder, 'test_' + image_name))
