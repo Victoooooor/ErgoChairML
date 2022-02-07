@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-VERSION = '0.0.1'
+VERSION = '0.0.2'
 DESCRIPTION = 'ErgoChairML'
 LONG_DESCRIPTION = 'Scrap Image from Google, Preprocess and generate dataset, train pix2pix'
 
