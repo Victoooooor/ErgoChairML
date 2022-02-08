@@ -229,10 +229,11 @@ class Preprocess(object):
 
     personimg = image_origin[0].numpy()
     self.seg.classmask(personimg, [self.person])
-    output_overlay = self.draw_prediction_on_image(personimg, ppl,
+    output_mask = self.draw_prediction_on_image(personimg, ppl,
                                                    close_figure=True, keep_input_size=True)
-
-    return output_overlay
+    output_ske = self.draw_prediction_on_image(np.full_like(personimg,0), ppl,
+              close_figure=True, keep_input_size=True)
+    return output_mask, output_ske
 
 
   def class_names(self):
