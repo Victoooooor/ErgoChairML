@@ -2,7 +2,7 @@ import os
 import pathlib
 
 import tensorflow as tf
-from PIL import Image
+from PIL import Image, ImageSequence
 from gen_chair.gen_multi import Preprocess
 from gen_chair.gen_pose import Preprocess as Preprocess2
 from gen_chair import pix2pix
@@ -42,7 +42,7 @@ def Infer(preproc, generator, origin):
 if __name__ == "__main__":
 
     print(os.getcwd())
-    PATH = '../data'
+    PATH = '../data/gif'
     # PATH = '../pose'
     path_to_zip = pathlib.Path(PATH)
     PATH = path_to_zip / 'sitting_in_chair'
@@ -68,15 +68,20 @@ if __name__ == "__main__":
     outdr2 = '../out_ske'
     img_suffix = ('.jpg', '.png', '.ico', '.gif', '.jpeg')
     image_path = os.path.join(imgdr, image_name)
-    os.mkdir(outdr1)
-    os.mkdir(outdr2)
-    if image_path.endswith(img_suffix):
-        image = tf.io.read_file(image_path)
-        image = tf.io.decode_jpeg(image)
-        maskout = Infer(prep.img_seg, masked.generator, image)
-        skeletonout = Infer(prep2.img_seg, skeleton.generator, image)
-        maskout.save(os.path.join(outdr1, image_name))
-        skeletonout.save(os.path.join(outdr2, image_name))
+    os.mkdir(outdr1,exist_ok=True)
+    os.mkdir(outdr2,exist_ok=True)
+    if image_path.endswith('.gif'):
+        image = Image.open(image_path)
+        image.seek(0)
+        mask_frames = []
+        ske_frames = []
+        durations = []
+        for frame in ImageSequence.Iterator(image):
+            durations.append(image.info['duration'])
+            frame = frame.convert('RGB')
+            tfframe = tf.keras.preprocessing.image.img_to_array(frame)
+            mframe = Infer(prep.img_seg, masked.generator, tfframe)
+            sframe = Infer(prep2.img_seg, skeleton.generator, tfframe)
 
 
 
