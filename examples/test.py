@@ -16,11 +16,13 @@ class InferenceConfig(coco.CocoConfig):
 def Infer(preproc, generator, origin, masked = True):
 
   pre = preproc(origin)
-  print(pre)
-  if masked:
-    seg = pre[0]
+  if type(pre) is tuple:
+      if masked:
+        seg = pre[0]
+      else:
+        seg = pre[1]
   else:
-    seg = pre[1]
+      seg = None
   origin = tf.cast(tf.image.resize_with_pad(origin, 256, 256), dtype=tf.int32)
 
   if seg is not None:
@@ -36,8 +38,6 @@ def Infer(preproc, generator, origin, masked = True):
   gen = tf.keras.utils.array_to_img(gen[0])
 
   seg = tf.keras.utils.array_to_img(seg[0])
-
-
 
   origin = tf.keras.utils.array_to_img(origin)
   dst = Image.new('RGB', (origin.width + seg.width + gen.width, origin.height))
