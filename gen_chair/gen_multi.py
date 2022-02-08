@@ -199,11 +199,13 @@ class Preprocess(object):
       image = tf.cast(tf.image.resize_with_pad(image, 256, 256), dtype=tf.int32)
       _, image_height, image_width, channel = image_origin.shape
     except:
-      return None
+      print("Convert Failed", file=sys.stderr)
+      return 1
 
     # Skip images that isn't RGB because Movenet requires RGB images
     if channel != 3:
-      return None
+      print("Channel Error", file=sys.stderr)
+      return 2
 
     output = self.movenet(image)
     people = output['output_0'].numpy()[:, :, :51].reshape((6, 17, 3))
@@ -225,7 +227,8 @@ class Preprocess(object):
 
     should_keep_image = len(ppl) > 0
     if not should_keep_image:
-      return None
+      print("None Detected", file=sys.stderr)
+      return 3
 
     personimg = image_origin[0].numpy()
     self.seg.classmask(personimg, [self.person])
@@ -233,6 +236,7 @@ class Preprocess(object):
                                                    close_figure=True, keep_input_size=True)
     output_ske = self.draw_prediction_on_image(np.full_like(personimg,0), ppl,
               close_figure=True, keep_input_size=True)
+    print(output_mask, output_ske)
     return output_mask, output_ske
 
 
