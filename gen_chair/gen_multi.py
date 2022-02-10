@@ -161,9 +161,9 @@ class Preprocess(object):
           valid_image_count += 1
 
           pcimg = image[0].numpy().copy()
-          personimg = image[0].numpy()
+          personimg = np.full_like(image[0],0)
           self.seg.classmask(pcimg, [self.person, self.chair])
-          self.seg.classmask(personimg, [self.person])
+          # self.seg.classmask(personimg, [self.person])
           PIL_pc = Image.fromarray(pcimg.astype('uint8'), 'RGB')
 
           # Draw the prediction result on top of the image for debugging later
