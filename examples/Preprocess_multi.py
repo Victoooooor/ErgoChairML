@@ -36,5 +36,5 @@ if __name__ == '__main__':
     # prep.process(imgdr, posedr, None,0.1)
     image = tf.io.read_file('./data/person_sit/person sit_3.jpeg')
     image = tf.io.decode_jpeg(image)
-    out = prep.img_seg(image)
+    out, _ = prep.img_seg(image)
     print(type(out))
