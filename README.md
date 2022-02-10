@@ -52,7 +52,12 @@ The project is packaged as python package gen_chair. And Demo is available on Go
 
 Design based off ErgoChair output by Rhyna
 ![enter image description here](https://github.com/Victoooooor/ErgoChairML/blob/main/image/work1.png?raw=true)
+Work produced by added depth to ErgoChair output
 
+![Work2
+](https://github.com/Victoooooor/ErgoChairML/blob/main/image/work2.gif?raw=true)
+![Work3
+](https://github.com/Victoooooor/ErgoChairML/blob/main/image/work3.gif?raw=true)
 
 
 
