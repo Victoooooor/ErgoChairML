@@ -50,6 +50,7 @@ The project is packaged as python package gen_chair. And Demo is available on Go
 ![Skeleton Animated 5](https://github.com/Victoooooor/ErgoChairML/blob/main/image/animated.gif?raw=true)
 ![Skeleton Output 6](https://github.com/Victoooooor/ErgoChairML/blob/main/image/weirdpose.jpg?raw=true)
 ![Webcam Output 1](https://github.com/Victoooooor/ErgoChairML/blob/main/image/webcam4.jpg?raw=true)
+
 Design based off ErgoChair output by Rhyna
 ![enter image description here](https://github.com/Victoooooor/ErgoChairML/blob/main/image/work1.png?raw=true)
 Work produced by added depth to ErgoChair output
