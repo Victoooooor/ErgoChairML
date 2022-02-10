@@ -1,6 +1,7 @@
 # ErgoChairML
 
 **ErgoChairML** aims to generate chair for a poseture. The chair image is generated using a pix2pix GAN trained on custom dataset. The dataset is created by scraping Google Image with key words and preprocessing the image with movenet and Mask RCNN.
+
 The project is packaged as python package gen_chair. And Demo is available on Google Colab. [Media Processing](https://colab.research.google.com/github/Victoooooor/ErgoChairML/blob/main/Demo.ipynb) Demo is made to generate image from image or video uploads, and [Webcam Demo](https://colab.research.google.com/github/Victoooooor/ErgoChairML/blob/main/Demo_Vid.ipynb) generates images through webcam feed. 
 
 # Files
@@ -57,8 +58,4 @@ Design based off ErgoChair output by Rhyna
 
 ## Diagrams
 
-```mermaid
-graph LR
-A[Image Inout] -- MoveNet & Mask-RCNN --> B[Preproccessed]
-B -- Pix2Pix --> C[Output]
-```
+![Simple Diagram](https://github.com/Victoooooor/ErgoChairML/blob/main/image/diagram.png?raw=true)
